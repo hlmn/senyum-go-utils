@@ -1,13 +1,13 @@
 package echo
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"time"
 
+	sentryUmi "github.com/fonysaputra/go-utils/apm/sentry"
+
 	"github.com/getsentry/sentry-go"
-	sentryecho "github.com/getsentry/sentry-go/echo"
 	"github.com/labstack/echo/v4"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	logDump "github.com/sirupsen/logrus"
@@ -42,54 +42,31 @@ func InitBodyDumpLog() (err error) {
 func Info(c echo.Context, breadcumb sentry.Breadcrumb, data logDump.Fields, message interface{}) {
 	logDump.WithFields(data).Info(message)
 
-	SentryLog(c, breadcumb, data, fmt.Sprintf("%v", message))
+	sentryUmi.SentryLog(c, breadcumb, data, message)
 
 }
 
 func Error(c echo.Context, breadcumb sentry.Breadcrumb, data logDump.Fields, message interface{}) {
 	logDump.WithFields(data).Error(message)
-	SentryLog(c, breadcumb, data, fmt.Sprintf("%v", message))
+	sentryUmi.SentryLog(c, breadcumb, data, message)
 
 }
 
 func Fatal(c echo.Context, breadcumb sentry.Breadcrumb, data logDump.Fields, message interface{}) {
 	logDump.WithFields(data).Fatal(message)
-	SentryLog(c, breadcumb, data, fmt.Sprintf("%v", message))
+	sentryUmi.SentryLog(c, breadcumb, data, message)
 
 }
 
 func Debug(c echo.Context, breadcumb sentry.Breadcrumb, data logDump.Fields, message interface{}) {
 	logDump.WithFields(data).Debug(message)
-	SentryLog(c, breadcumb, data, fmt.Sprintf("%v", message))
+	sentryUmi.SentryLog(c, breadcumb, data, message)
 
 }
 
 func Panic(c echo.Context, breadcumb sentry.Breadcrumb, data logDump.Fields, message interface{}) {
 
 	logDump.WithFields(data).Panic(message)
-	SentryLog(c, breadcumb, data, fmt.Sprintf("%v", message))
-
-}
-
-func SentryLog(c echo.Context, breadcumb sentry.Breadcrumb, data logDump.Fields, message string) {
-	if c != nil {
-		if c.Get("UserId") != nil {
-			userId = fmt.Sprintf("%v", fmt.Sprintf("%v", c.Get("UserId")))
-		} else {
-			userId = fmt.Sprintf("%v", c.Get("RequestID"))
-		}
-
-		if hub := sentryecho.GetHubFromContext(c); hub != nil {
-			hub := sentryecho.GetHubFromContext(c)
-
-			dataBreadcumb := breadcumb
-
-			dataBreadcumb.Data = data
-			dataBreadcumb.Message = message
-
-			hub.CaptureMessage(message)
-			hub.AddBreadcrumb(&dataBreadcumb, &sentry.BreadcrumbHint{})
-		}
-	}
+	sentryUmi.SentryLog(c, breadcumb, data, message)
 
 }
