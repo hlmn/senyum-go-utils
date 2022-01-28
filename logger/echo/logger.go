@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	sentryUmi "github.com/fonysaputra/go-utils/apm/sentry"
+	sentryUmi "github.com/hlmn/senyum-go-utils/apm/sentry"
 
 	"github.com/labstack/echo/v4"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"

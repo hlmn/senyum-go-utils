@@ -44,7 +44,7 @@ func New(config goSentry.ClientOptions) {
 func MiddlewareSentry(next echo.HandlerFunc) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
-		span := sentry.StartSpan(ctx.Request().Context(), ctx.Path(), sentry.TransactionName(hub.Scope().Transaction()))
+		span := sentry.StartSpan(ctx.Request().Context(), ctx.Path(), sentry.TransactionName(fmt.Sprintf("%s", ctx.Path())))
 
 		defer span.Finish()
 
@@ -57,12 +57,10 @@ func MiddlewareSentry(next echo.HandlerFunc) echo.HandlerFunc {
 				userId = fmt.Sprintf("%v", fmt.Sprintf("%v", ctx.Get("UserId")))
 			}
 
-			hub.Scope().SetTransaction(fmt.Sprintf("%s", ctx.Path()))
 			hub.Scope().SetUser(sentry.User{
 				ID: userId,
 				//	IPAddress: m.GetLocalIP(),
 			})
-			hub.Scope().SetLevel(sentry.LevelError)
 			hub.Scope().SetRequest(ctx.Request())
 
 			// hub.ConfigureScope(func(scope *sentry.Scope) {
