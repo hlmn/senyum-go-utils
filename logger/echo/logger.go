@@ -5,9 +5,8 @@ import (
 	"os"
 	"time"
 
-	sentryUmi "github.com/fonysaputra/go-utils/apm/sentry"
+	sentryUmi "github.com/hlmn/senyum-go-utils/apm/sentry"
 
-	"github.com/getsentry/sentry-go"
 	"github.com/labstack/echo/v4"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	logDump "github.com/sirupsen/logrus"
@@ -39,34 +38,34 @@ func InitBodyDumpLog() (err error) {
 	return
 }
 
-func Info(c echo.Context, breadcumb sentry.Breadcrumb, data logDump.Fields, message interface{}) {
+func Info(c echo.Context, data logDump.Fields, message interface{}) {
 	logDump.WithFields(data).Info(message)
 
-	sentryUmi.SentryLog(c, breadcumb, data, message)
+	sentryUmi.SentryLog(c, data, message)
 
 }
 
-func Error(c echo.Context, breadcumb sentry.Breadcrumb, data logDump.Fields, message interface{}) {
+func Error(c echo.Context, data logDump.Fields, message interface{}) {
 	logDump.WithFields(data).Error(message)
-	sentryUmi.SentryLog(c, breadcumb, data, message)
+	sentryUmi.SentryLog(c, data, message)
 
 }
 
-func Fatal(c echo.Context, breadcumb sentry.Breadcrumb, data logDump.Fields, message interface{}) {
+func Fatal(c echo.Context, data logDump.Fields, message interface{}) {
 	logDump.WithFields(data).Fatal(message)
-	sentryUmi.SentryLog(c, breadcumb, data, message)
+	sentryUmi.SentryLog(c, data, message)
 
 }
 
-func Debug(c echo.Context, breadcumb sentry.Breadcrumb, data logDump.Fields, message interface{}) {
+func Debug(c echo.Context, data logDump.Fields, message interface{}) {
 	logDump.WithFields(data).Debug(message)
-	sentryUmi.SentryLog(c, breadcumb, data, message)
+	sentryUmi.SentryLog(c, data, message)
 
 }
 
-func Panic(c echo.Context, breadcumb sentry.Breadcrumb, data logDump.Fields, message interface{}) {
+func Panic(c echo.Context, data logDump.Fields, message interface{}) {
 
 	logDump.WithFields(data).Panic(message)
-	sentryUmi.SentryLog(c, breadcumb, data, message)
+	sentryUmi.SentryLog(c, data, message)
 
 }
