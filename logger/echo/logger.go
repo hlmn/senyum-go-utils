@@ -16,10 +16,10 @@ var (
 	userId = ""
 )
 
-func InitBodyDumpLog() (err error) {
+func InitBodyDumpLog() error {
 	dir, err := os.Getwd()
 	if err != nil {
-		return
+		return err
 	}
 
 	logf, err := rotatelogs.New(
@@ -29,13 +29,16 @@ func InitBodyDumpLog() (err error) {
 		rotatelogs.WithMaxAge(-1),
 		rotatelogs.WithRotationCount(365),
 	)
+	if err != nil {
+		return err
+	}
 
 	logDump.SetFormatter(&logDump.JSONFormatter{DisableHTMLEscape: true})
 	logDump.SetOutput(io.MultiWriter(os.Stdout, logf))
 	logDump.SetLevel(logDump.InfoLevel)
 	logDump.SetReportCaller(true)
 
-	return
+	return nil
 }
 
 func Info(c echo.Context, data logDump.Fields, message interface{}) {
