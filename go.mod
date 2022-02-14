@@ -10,4 +10,5 @@ require (
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/lestrrat-go/strftime v1.0.5 // indirect
 	github.com/sirupsen/logrus v1.8.1
+	github.com/thedevsaddam/govalidator v1.9.10
 )
