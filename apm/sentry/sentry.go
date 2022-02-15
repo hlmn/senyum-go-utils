@@ -2,7 +2,6 @@ package sentry
 
 import (
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/MrAndreID/gohelpers"
@@ -25,16 +24,7 @@ func New(config goSentry.ClientOptions) {
 		TracesSampler: goSentry.TracesSamplerFunc(func(ctx goSentry.SamplingContext) goSentry.Sampled {
 			return goSentry.SampledTrue
 		}),
-		BeforeSend: func(event *goSentry.Event, hint *goSentry.EventHint) *goSentry.Event {
-			if hint.Context != nil {
-				if req, ok := hint.Context.Value(goSentry.RequestContextKey).(*http.Request); ok {
-					// You have access to the original Request
-					logDump.Info(req)
-				}
-			}
-			logDump.Info(event)
-			return event
-		},
+
 		Debug:            true,
 		AttachStacktrace: true,
 	})
