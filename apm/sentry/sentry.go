@@ -12,10 +12,6 @@ import (
 	logDump "github.com/sirupsen/logrus"
 )
 
-var (
-	userId = ""
-)
-
 func New(config goSentry.ClientOptions) {
 	goSentry.Init(goSentry.ClientOptions{
 		Dsn:        config.Dsn,
@@ -34,6 +30,7 @@ func New(config goSentry.ClientOptions) {
 func MiddlewareSentry(next echo.HandlerFunc) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
+
 		span := sentry.StartSpan(ctx.Request().Context(), ctx.Path(), sentry.TransactionName(fmt.Sprintf("%s", ctx.Path())))
 
 		defer span.Finish()
@@ -44,24 +41,19 @@ func MiddlewareSentry(next echo.HandlerFunc) echo.HandlerFunc {
 			)
 
 			if ctx.Get("UserId") != nil {
-				userId = fmt.Sprintf("%v", fmt.Sprintf("%v", ctx.Get("UserId")))
+				userId = fmt.Sprintf("%v", ctx.Get("UserId"))
+			}
+
+			if ctx.Request().Header.Get("umiUserId") != "" {
+				userId = ctx.Request().Header.Get("umiUserId")
+			} else if ctx.Request().Header.Get("requestId") != "" {
+				userId = ctx.Request().Header.Get("requestId")
 			}
 
 			hub.Scope().SetUser(sentry.User{
 				ID: userId,
-				//	IPAddress: m.GetLocalIP(),
 			})
 			hub.Scope().SetRequest(ctx.Request())
-
-			// hub.ConfigureScope(func(scope *sentry.Scope) {
-			// 	scope.SetLevel(sentry.LevelError)
-			// 	scope.SetUser(sentry.User{
-			// 		ID: userId,
-			// 		//IPAddress: h.GetLocalIP(),
-			// 	})
-			// 	//	scope.AddBreadcrumb(&sentry.Breadcrumb{Message: "auth", Type: "info", Level: "error", Data: map[string]interface{}{"response": data}}, 1)
-			// })
-
 			sentry.Logger.SetFlags(time.Now().Minute())
 			sentry.Logger.SetPrefix("[sentry SDK]")
 
@@ -72,10 +64,11 @@ func MiddlewareSentry(next echo.HandlerFunc) echo.HandlerFunc {
 
 }
 
-func SentryLog(c echo.Context, data logDump.Fields, message interface{}) {
+func SentryLog(c echo.Context, data logDump.Fields, message interface{}, level goSentry.Level) {
+	userId := ""
 	if c != nil {
 		if c.Get("UserId") != nil {
-			userId = fmt.Sprintf("%v", fmt.Sprintf("%v", c.Get("UserId")))
+			userId = fmt.Sprintf("%v", c.Get("UserId"))
 		} else {
 			userId = fmt.Sprintf("%v", c.Get("RequestID"))
 		}
@@ -83,22 +76,14 @@ func SentryLog(c echo.Context, data logDump.Fields, message interface{}) {
 		if hub := sentryecho.GetHubFromContext(c); hub != nil {
 			hub := sentryecho.GetHubFromContext(c)
 
-			// dataBreadcumb := breadcumb
-
-			// dataBreadcumb.Data = data
-			// dataBreadcumb.Message = fmt.Sprintf("%v", message)
-
 			hub.ConfigureScope(func(scope *sentry.Scope) {
-				scope.SetLevel(sentry.LevelError)
+				scope.SetLevel(level)
 				scope.SetUser(sentry.User{
 					ID: userId,
-					//IPAddress: h.GetLocalIP(),
 				})
-				//	scope.AddBreadcrumb(&sentry.Breadcrumb{Message: "auth", Type: "info", Level: "error", Data: map[string]interface{}{"response": data}}, 1)
 			})
 
 			hub.CaptureMessage(string(gohelpers.JSONEncode(data)))
-			//sentry.AddBreadcrumb(&dataBreadcumb)
 		}
 	}
 
