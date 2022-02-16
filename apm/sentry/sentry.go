@@ -51,7 +51,8 @@ func MiddlewareSentry(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			hub.Scope().SetUser(sentry.User{
-				ID: userId,
+				ID:       userId,
+				Username: userId,
 			})
 			ctx.Set("UserId", userId)
 			hub.Scope().SetRequest(ctx.Request())
@@ -80,7 +81,8 @@ func SentryLog(c echo.Context, data logDump.Fields, message interface{}, level g
 			hub.ConfigureScope(func(scope *sentry.Scope) {
 				scope.SetLevel(level)
 				scope.SetUser(sentry.User{
-					ID: userId,
+					ID:       userId,
+					Username: userId,
 				})
 			})
 
