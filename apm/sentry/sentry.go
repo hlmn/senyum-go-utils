@@ -53,6 +53,7 @@ func MiddlewareSentry(next echo.HandlerFunc) echo.HandlerFunc {
 			hub.Scope().SetUser(sentry.User{
 				ID: userId,
 			})
+			ctx.Set("UserId", userId)
 			hub.Scope().SetRequest(ctx.Request())
 			sentry.Logger.SetFlags(time.Now().Minute())
 			sentry.Logger.SetPrefix("[sentry SDK]")
