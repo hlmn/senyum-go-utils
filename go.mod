@@ -9,5 +9,6 @@ require (
 	github.com/labstack/echo/v4 v4.6.3
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/lestrrat-go/strftime v1.0.5 // indirect
+	github.com/minio/minio-go/v7 v7.0.22
 	github.com/sirupsen/logrus v1.8.1
 )
