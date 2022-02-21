@@ -5,13 +5,11 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
@@ -24,6 +22,9 @@ type Config struct {
 	proxyUrl        string
 	token           string
 	bucket          string
+	proxyPublic     string
+	urlPublic       string
+	urlProxyPublic  string
 }
 
 func New(config *Config) (*Config, error) {
@@ -36,6 +37,9 @@ func New(config *Config) (*Config, error) {
 	minio.secretAccessKey = config.secretAccessKey
 	minio.token = config.token
 	minio.useSSL = config.useSSL
+	minio.urlProxyPublic = config.urlProxyPublic
+	minio.urlPublic = config.urlPublic
+	minio.proxyUrl = config.proxyUrl
 
 	return &minio, err
 }
@@ -61,7 +65,7 @@ func (config Config) initMinio() (*minio.Client, error) {
 
 }
 
-func (config Config) FileBase64(fileContent string) (*string, error) {
+func (config Config) FileBase64(fileName string, fileContent string) (*string, error) {
 	idx := strings.Index(fileContent, ";base64,")
 
 	if idx < 0 {
@@ -82,7 +86,7 @@ func (config Config) FileBase64(fileContent string) (*string, error) {
 
 	file := bytes.NewReader(unbased)
 
-	fileName := fmt.Sprint(uuid.New(), ".", imageType)
+	// fileName := fmt.Sprint(uuid.New(), ".", imageType)
 	cacheControl := "max-age=31536000"
 	userMetaData := map[string]string{"x-amz-acl": "public-read"}
 
@@ -121,4 +125,29 @@ func (config Config) File(fileContent *multipart.FileHeader) (*string, error) {
 	info, err := minioClient.PutObject(ctx, "umi", objectName, fileBuffer, fileSize, minio.PutObjectOptions{ContentType: contentType, CacheControl: cacheControl, UserMetadata: userMetaData})
 
 	return &info.Key, err
+}
+
+func (config Config) GetFile(fileName string) (*http.Response, error) {
+	client := &http.Client{}
+
+	if config.proxyPublic == "true" {
+		proxyUrl, err := url.Parse(config.urlProxyPublic)
+		if err != nil {
+			return nil, err
+		}
+		client = &http.Client{
+			Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)},
+		}
+	}
+
+	urls := config.urlPublic + "/" + config.bucket + "/" + fileName
+
+	req, err := http.NewRequestWithContext(context.Background(), "GET", urls, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resultHttp, err := client.Do(req)
+
+	return resultHttp, err
 }
