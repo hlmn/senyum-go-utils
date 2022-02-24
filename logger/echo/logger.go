@@ -5,15 +5,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	sentryUmi "github.com/hlmn/senyum-go-utils/apm/sentry"
 
 	"github.com/labstack/echo/v4"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	logDump "github.com/sirupsen/logrus"
-)
-
-var (
-	userId = ""
 )
 
 func InitBodyDumpLog() error {
@@ -44,31 +41,38 @@ func InitBodyDumpLog() error {
 func Info(c echo.Context, data logDump.Fields, message interface{}) {
 	logDump.WithFields(data).Info(message)
 
-	sentryUmi.SentryLog(c, data, message)
+	sentryUmi.SentryLog(c, data, message, sentry.LevelInfo)
 
 }
 
 func Error(c echo.Context, data logDump.Fields, message interface{}) {
 	logDump.WithFields(data).Error(message)
-	sentryUmi.SentryLog(c, data, message)
+	sentryUmi.SentryLog(c, data, message, sentry.LevelError)
 
 }
 
 func Fatal(c echo.Context, data logDump.Fields, message interface{}) {
 	logDump.WithFields(data).Fatal(message)
-	sentryUmi.SentryLog(c, data, message)
+	sentryUmi.SentryLog(c, data, message, sentry.LevelFatal)
 
 }
 
 func Debug(c echo.Context, data logDump.Fields, message interface{}) {
 	logDump.WithFields(data).Debug(message)
-	sentryUmi.SentryLog(c, data, message)
+	sentryUmi.SentryLog(c, data, message, sentry.LevelDebug)
 
 }
 
 func Panic(c echo.Context, data logDump.Fields, message interface{}) {
 
 	logDump.WithFields(data).Panic(message)
-	sentryUmi.SentryLog(c, data, message)
+	sentryUmi.SentryLog(c, data, message, sentry.LevelError)
+
+}
+
+func Warning(c echo.Context, data logDump.Fields, message interface{}) {
+
+	logDump.WithFields(data).Warning(message)
+	sentryUmi.SentryLog(c, data, message, sentry.LevelWarning)
 
 }
