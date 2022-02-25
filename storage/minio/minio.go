@@ -15,16 +15,16 @@ import (
 )
 
 type Config struct {
-	endpoint        string
-	accessKeyID     string
-	secretAccessKey string
-	useSSL          bool
-	proxyUrl        string
-	token           string
-	bucket          string
-	proxyPublic     string
-	urlPublic       string
-	urlProxyPublic  string
+	Endpoint        string
+	AccessKeyID     string
+	SecretAccessKey string
+	UseSSL          bool
+	ProxyUrl        string
+	Token           string
+	Bucket          string
+	ProxyPublic     string
+	UrlPublic       string
+	UrlProxyPublic  string
 }
 
 func New(config *Config) (*Config, error) {
