@@ -30,32 +30,22 @@ type Config struct {
 func New(config *Config) (*Config, error) {
 	var err error
 	minio := Config{}
-	minio.accessKeyID = config.accessKeyID
-	minio.bucket = config.bucket
-	minio.endpoint = config.endpoint
-	minio.proxyUrl = config.proxyUrl
-	minio.secretAccessKey = config.secretAccessKey
-	minio.token = config.token
-	minio.useSSL = config.useSSL
-	minio.urlProxyPublic = config.urlProxyPublic
-	minio.urlPublic = config.urlPublic
-	minio.proxyUrl = config.proxyUrl
-
+	minio = *config
 	return &minio, err
 }
 
 func (config Config) initMinio() (*minio.Client, error) {
 
-	proxyUrl, _ := url.Parse(config.proxyUrl)
+	proxyUrl, _ := url.Parse(config.ProxyUrl)
 
 	// Initialize minio client object.
-	minioClient, errInit := minio.New(config.endpoint, &minio.Options{
-		Creds:     credentials.NewStaticV4(config.accessKeyID, config.secretAccessKey, config.token),
-		Secure:    config.useSSL,
+	minioClient, errInit := minio.New(config.Endpoint, &minio.Options{
+		Creds:     credentials.NewStaticV4(config.AccessKeyID, config.SecretAccessKey, config.Token),
+		Secure:    config.UseSSL,
 		Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)},
 	})
 
-	_, err := minioClient.BucketExists(context.Background(), config.bucket)
+	_, err := minioClient.BucketExists(context.Background(), config.Bucket)
 	if err != nil {
 		return minioClient, err
 
@@ -90,7 +80,7 @@ func (config Config) FileBase64(fileName string, fileContent string) (*string, e
 	cacheControl := "max-age=31536000"
 	userMetaData := map[string]string{"x-amz-acl": "public-read"}
 
-	info, err := minioClient.PutObject(context.Background(), config.bucket, fileName, file, -1, minio.PutObjectOptions{
+	info, err := minioClient.PutObject(context.Background(), config.Bucket, fileName, file, -1, minio.PutObjectOptions{
 		ContentType:  "image/" + imageType,
 		CacheControl: cacheControl,
 		UserMetadata: userMetaData,
@@ -130,8 +120,8 @@ func (config Config) File(fileContent *multipart.FileHeader) (*string, error) {
 func (config Config) GetFile(fileName string) (*http.Response, error) {
 	client := &http.Client{}
 
-	if config.proxyPublic == "true" {
-		proxyUrl, err := url.Parse(config.urlProxyPublic)
+	if config.ProxyPublic == "true" {
+		proxyUrl, err := url.Parse(config.UrlProxyPublic)
 		if err != nil {
 			return nil, err
 		}
@@ -140,7 +130,7 @@ func (config Config) GetFile(fileName string) (*http.Response, error) {
 		}
 	}
 
-	urls := config.urlPublic + "/" + config.bucket + "/" + fileName
+	urls := config.UrlPublic + "/" + config.Bucket + "/" + fileName
 
 	req, err := http.NewRequestWithContext(context.Background(), "GET", urls, nil)
 	if err != nil {
