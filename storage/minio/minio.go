@@ -15,16 +15,14 @@ import (
 )
 
 type Config struct {
-	Endpoint        string
+	UrlMinio        string
 	AccessKeyID     string
 	SecretAccessKey string
 	UseSSL          bool
+	UseProxy        bool
 	ProxyUrl        string
 	Token           string
 	Bucket          string
-	ProxyPublic     string
-	UrlPublic       string
-	UrlProxyPublic  string
 }
 
 func New(config *Config) (*Config, error) {
@@ -36,14 +34,21 @@ func New(config *Config) (*Config, error) {
 
 func (config Config) initMinio() (*minio.Client, error) {
 
-	proxyUrl, _ := url.Parse(config.ProxyUrl)
-
 	// Initialize minio client object.
-	minioClient, errInit := minio.New(config.Endpoint, &minio.Options{
-		Creds:     credentials.NewStaticV4(config.AccessKeyID, config.SecretAccessKey, config.Token),
-		Secure:    config.UseSSL,
-		Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)},
+	minioClient, errInit := minio.New(config.UrlMinio, &minio.Options{
+		Creds:  credentials.NewStaticV4(config.AccessKeyID, config.SecretAccessKey, config.Token),
+		Secure: config.UseSSL,
 	})
+
+	if config.UseProxy {
+		proxyUrl, _ := url.Parse(config.ProxyUrl)
+
+		minioClient, errInit = minio.New(config.UrlMinio, &minio.Options{
+			Creds:     credentials.NewStaticV4(config.AccessKeyID, config.SecretAccessKey, config.Token),
+			Secure:    config.UseSSL,
+			Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)},
+		})
+	}
 
 	_, err := minioClient.BucketExists(context.Background(), config.Bucket)
 	if err != nil {
@@ -112,25 +117,25 @@ func (config Config) File(fileContent *multipart.FileHeader) (*string, error) {
 	cacheControl := "max-age=31536000"
 	userMetaData := map[string]string{"x-amz-acl": "public-read"}
 
-	info, err := minioClient.PutObject(ctx, "umi", objectName, fileBuffer, fileSize, minio.PutObjectOptions{ContentType: contentType, CacheControl: cacheControl, UserMetadata: userMetaData})
+	info, err := minioClient.PutObject(ctx, config.Bucket, objectName, fileBuffer, fileSize, minio.PutObjectOptions{ContentType: contentType, CacheControl: cacheControl, UserMetadata: userMetaData})
 
 	return &info.Key, err
 }
 
-func (config Config) GetFile(fileName string) (*http.Response, error) {
+func (config Config) GetFile(url string, bucket string, fileName string) (*http.Response, error) {
 	client := &http.Client{}
 
-	if config.ProxyPublic == "true" {
-		proxyUrl, err := url.Parse(config.UrlProxyPublic)
-		if err != nil {
-			return nil, err
-		}
-		client = &http.Client{
-			Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)},
-		}
-	}
+	// if config.UseProxyPublic {
+	// 	proxyUrl, err := url.Parse(config.UrlProxyPublic)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	client = &http.Client{
+	// 		Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)},
+	// 	}
+	// }
 
-	urls := config.UrlPublic + "/" + config.Bucket + "/" + fileName
+	urls := url + "/" + bucket + "/" + fileName
 
 	req, err := http.NewRequestWithContext(context.Background(), "GET", urls, nil)
 	if err != nil {
