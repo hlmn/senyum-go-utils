@@ -2,7 +2,7 @@ package helper
 
 import "strings"
 
-func convertPhoneNumberTo08(phoneNumber *string) {
+func ConvertPhoneNumberTo08(phoneNumber *string) {
 	if phoneNumber == nil {
 		return
 	}
