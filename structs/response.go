@@ -1,6 +1,14 @@
 package structs
 
 type (
+	Paginator struct {
+		Data            interface{} `json:"data"`
+		Draw            int         `json:"draw"`
+		RecordsFiltered int64       `json:"recordsFiltered"`
+		RecordsTotal    int64       `json:"recordsTotal"`
+		HasMore         bool        `json:"hasMore"`
+	}
+
 	Response struct {
 		Code        string      `json:"responseCode"`
 		Description string      `json:"responseDescription"`
