@@ -21,4 +21,11 @@ type (
 		Headers    map[string][]string
 		Error      error
 	}
+
+	SurroundingHTTPResponse struct {
+		Body       interface{}
+		StatusCode int
+		Headers    map[string][]string
+		Error      error
+	}
 )
