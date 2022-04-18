@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/MrAndreID/gohelpers v1.5.0
+	github.com/gabriel-vasile/mimetype v1.4.0
 	github.com/getsentry/sentry-go v0.12.0
 	github.com/google/uuid v1.1.1
 	github.com/jonboulle/clockwork v0.2.2 // indirect

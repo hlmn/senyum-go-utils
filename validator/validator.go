@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/base64"
 	"errors"
 	"regexp"
 	"time"
@@ -36,6 +37,20 @@ func InitValidator() {
 		_, err := time.Parse("2006-01-02 15:04:05", val)
 		if err != nil {
 			return errors.New("the " + field + " is not a datetime format")
+		}
+
+		return nil
+	})
+
+	govalidator.AddCustomRule("base64Std", func(field string, rule string, message string, value interface{}) error {
+		val, ok := value.(string)
+		if !ok {
+			return errors.New("The " + field + " is not base64 format")
+		}
+
+		_, err := base64.StdEncoding.DecodeString(val)
+		if err != nil {
+			return errors.New("The " + field + " is not base64 format")
 		}
 
 		return nil

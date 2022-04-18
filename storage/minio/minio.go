@@ -1,16 +1,15 @@
 package minio
 
 import (
-	"bytes"
 	"context"
-	"encoding/base64"
 	"errors"
+	"fmt"
 	"mime/multipart"
 	"net/http"
 	"net/url"
-	"strings"
 
-	"github.com/minio/minio-go/v7"
+	"github.com/hlmn/senyum-go-utils/helper"
+	minio "github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
@@ -18,108 +17,142 @@ type Config struct {
 	UrlMinio        string
 	AccessKeyID     string
 	SecretAccessKey string
-	UseSSL          bool
-	UseProxy        bool
+	UseSSL          string
 	ProxyUrl        string
 	Token           string
-	Bucket          string
 }
 
-func New(config *Config) (*Config, error) {
+type Minio struct {
+	Config *Config
+	client *minio.Client
+}
+
+func New(config *Config) (*Minio, error) {
 	var err error
-	minio := Config{}
-	minio = *config
-	return &minio, err
+	var Minio Minio
+
+	Minio.Config = config
+	Minio.client, err = Minio.initMinio()
+
+	return &Minio, err
 }
 
-func (config Config) initMinio() (*minio.Client, error) {
-
-	// Initialize minio client object.
-	minioClient, errInit := minio.New(config.UrlMinio, &minio.Options{
-		Creds:  credentials.NewStaticV4(config.AccessKeyID, config.SecretAccessKey, config.Token),
-		Secure: config.UseSSL,
-	})
-
-	if config.UseProxy {
-		proxyUrl, _ := url.Parse(config.ProxyUrl)
-
-		minioClient, errInit = minio.New(config.UrlMinio, &minio.Options{
-			Creds:     credentials.NewStaticV4(config.AccessKeyID, config.SecretAccessKey, config.Token),
-			Secure:    config.UseSSL,
-			Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)},
-		})
+func (m Minio) initMinio() (*minio.Client, error) {
+	minioOpts := &minio.Options{
+		Creds:  credentials.NewStaticV4(m.Config.AccessKeyID, m.Config.SecretAccessKey, m.Config.Token),
+		Secure: false,
 	}
 
-	_, err := minioClient.BucketExists(context.Background(), config.Bucket)
+	if m.Config.UseSSL == "true" {
+		minioOpts.Secure = true
+	}
+
+	if m.Config.ProxyUrl != "" {
+		proxyUrl, _ := url.Parse(m.Config.ProxyUrl)
+		minioOpts.Transport = &http.Transport{Proxy: http.ProxyURL(proxyUrl)}
+	}
+
+	minioClient, err := minio.New(m.Config.UrlMinio, minioOpts)
+
+	// _, err := minioClient.BucketExists(context.Background(), m.Config.Bucket)
+	// if err != nil {
+	// 	return minioClient, err
+
+	// }
+
+	return minioClient, err
+
+}
+
+// func (config Config) FileBase64(fileName string, fileContent string) (*string, error) {
+// 	idx := strings.Index(fileContent, ";base64,")
+
+// 	if idx < 0 {
+// 		return nil, errors.New("format not match")
+// 	}
+
+// 	imageType := fileContent[11:idx]
+
+// 	unbased, err := base64.StdEncoding.DecodeString(fileContent[idx+8:])
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	minioClient, errs := config.initMinio()
+// 	if errs != nil {
+// 		return nil, errs
+// 	}
+
+// 	file := bytes.NewReader(unbased)
+
+// 	// fileName := fmt.Sprint(uuid.New(), ".", imageType)
+// 	cacheControl := "max-age=31536000"
+// 	userMetaData := map[string]string{"x-amz-acl": "public-read"}
+
+// 	info, err := minioClient.PutObject(context.Background(), config.Bucket, fileName, file, -1, minio.PutObjectOptions{
+// 		ContentType:  "image/" + imageType,
+// 		CacheControl: cacheControl,
+// 		UserMetadata: userMetaData,
+// 	})
+
+// 	return &info.Key, err
+// }
+
+func (m Minio) Upload(path, bucket string, file *helper.File) (key string, err error) {
+	minioClient := m.client
+	ctx := context.Background()
+
+	err = minioClient.MakeBucket(ctx, bucket, minio.MakeBucketOptions{})
 	if err != nil {
-		return minioClient, err
-
+		exists, errBucketExists := minioClient.BucketExists(ctx, bucket)
+		if !(errBucketExists == nil && exists) {
+			return "", err
+		}
 	}
 
-	return minioClient, errInit
+	if file.Reader == nil {
+		return key, errors.New("Reader not found")
+	}
 
+	filePath := fmt.Sprintf("%s/%s", path, file.Name)
+
+	info, err := minioClient.PutObject(ctx, bucket, filePath, file.Reader, file.Reader.Size(), minio.PutObjectOptions{})
+	fmt.Println(err)
+	return info.Key, err
 }
 
-func (config Config) FileBase64(fileName string, fileContent string) (*string, error) {
-	idx := strings.Index(fileContent, ";base64,")
-
-	if idx < 0 {
-		return nil, errors.New("format not match")
-	}
-
-	imageType := fileContent[11:idx]
-
-	unbased, err := base64.StdEncoding.DecodeString(fileContent[idx+8:])
-	if err != nil {
-		return nil, err
-	}
-
-	minioClient, errs := config.initMinio()
-	if errs != nil {
-		return nil, errs
-	}
-
-	file := bytes.NewReader(unbased)
-
-	// fileName := fmt.Sprint(uuid.New(), ".", imageType)
-	cacheControl := "max-age=31536000"
-	userMetaData := map[string]string{"x-amz-acl": "public-read"}
-
-	info, err := minioClient.PutObject(context.Background(), config.Bucket, fileName, file, -1, minio.PutObjectOptions{
-		ContentType:  "image/" + imageType,
-		CacheControl: cacheControl,
-		UserMetadata: userMetaData,
-	})
-
-	return &info.Key, err
-}
-
-func (config Config) File(fileContent *multipart.FileHeader) (*string, error) {
+func (m Minio) UploadMultiPartFile(fileName, bucket string, fileContent *multipart.FileHeader) (string, error) {
 
 	// Get Buffer from file
 	buffer, err := fileContent.Open()
 
 	if err != nil {
-		return nil, err
+		return "", err
 	}
+
 	defer buffer.Close()
 
-	minioClient, errs := config.initMinio()
-	if errs != nil {
-		return nil, errs
-	}
-	ctx := context.Background()
+	minioClient := m.client
 
+	ctx := context.Background()
 	objectName := fileContent.Filename
 	fileBuffer := buffer
-	contentType := fileContent.Header["Content-Type"][0]
 	fileSize := fileContent.Size
-	cacheControl := "max-age=31536000"
-	userMetaData := map[string]string{"x-amz-acl": "public-read"}
 
-	info, err := minioClient.PutObject(ctx, config.Bucket, objectName, fileBuffer, fileSize, minio.PutObjectOptions{ContentType: contentType, CacheControl: cacheControl, UserMetadata: userMetaData})
+	err = minioClient.MakeBucket(ctx, bucket, minio.MakeBucketOptions{})
+	if err != nil {
+		// Check to see if we already own this bucket (which happens if you run this twice)
+		exists, errBucketExists := minioClient.BucketExists(ctx, bucket)
+		if !(errBucketExists == nil && exists) {
+			return "", err
+		}
+	}
+	// cacheControl := "max-age=31536000"
+	// userMetaData := map[string]string{"x-amz-acl": "public-read"}
 
-	return &info.Key, err
+	info, err := minioClient.PutObject(ctx, bucket, objectName, fileBuffer, fileSize, minio.PutObjectOptions{})
+
+	return info.Key, err
 }
 
 func (config Config) GetFile(url string, bucket string, fileName string) (*http.Response, error) {
