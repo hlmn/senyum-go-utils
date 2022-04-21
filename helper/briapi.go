@@ -21,6 +21,7 @@ type BRIAPI struct {
 	URL          string
 	ClientId     string
 	ClientSecret string
+	Proxy        string
 }
 
 type ResGetTokenBri struct {
@@ -41,17 +42,17 @@ func (api *BRIAPI) GetToken() (token string, err error) {
 	client := &http.Client{}
 	// client := &http.Client{Timeout: time.Second * time.Duration(timeout)}
 
-	// if h.Config.BriApiProxy == "true" {
-	// 	proxyUrl, err := url.Parse(h.Config.BriApiProxyUrl)
-	// 	if err != nil {
+	if api.Proxy != "" {
+		proxyUrl, err := url.Parse(api.Proxy)
+		if err != nil {
 
-	// 		logDump.Info(nil, logrus.Fields{"error": err}, "proxy")
+			logDump.Info(nil, logrus.Fields{"error": err}, "proxy")
 
-	// 		return token, err
-	// 	}
+			return token, err
+		}
 
-	// 	client = &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)}}
-	// }
+		client = &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)}}
+	}
 
 	data := url.Values{}
 	data.Set("client_id", api.ClientId)
