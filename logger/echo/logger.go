@@ -46,6 +46,10 @@ func getCaller() string {
 func Info(c echo.Context, data logDump.Fields, message interface{}) {
 	data["caller"] = getCaller()
 
+	if c != nil {
+		data["request_id"] = c.Get("RequestID")
+	}
+
 	logDump.WithFields(data).Info(message)
 	sentryUmi.SentryLog(c, data, message, sentry.LevelInfo)
 
@@ -53,6 +57,10 @@ func Info(c echo.Context, data logDump.Fields, message interface{}) {
 
 func Error(c echo.Context, data logDump.Fields, message interface{}) {
 	data["caller"] = getCaller()
+
+	if c != nil {
+		data["request_id"] = c.Get("RequestID")
+	}
 
 	logDump.WithFields(data).Error(message)
 	sentryUmi.SentryLog(c, data, message, sentry.LevelError)
@@ -62,6 +70,10 @@ func Error(c echo.Context, data logDump.Fields, message interface{}) {
 func Fatal(c echo.Context, data logDump.Fields, message interface{}) {
 	data["caller"] = getCaller()
 
+	if c != nil {
+		data["request_id"] = c.Get("RequestID")
+	}
+
 	logDump.WithFields(data).Fatal(message)
 	sentryUmi.SentryLog(c, data, message, sentry.LevelFatal)
 
@@ -69,6 +81,10 @@ func Fatal(c echo.Context, data logDump.Fields, message interface{}) {
 
 func Debug(c echo.Context, data logDump.Fields, message interface{}) {
 	data["caller"] = getCaller()
+
+	if c != nil {
+		data["request_id"] = c.Get("RequestID")
+	}
 
 	logDump.WithFields(data).Debug(message)
 	sentryUmi.SentryLog(c, data, message, sentry.LevelDebug)
@@ -78,6 +94,10 @@ func Debug(c echo.Context, data logDump.Fields, message interface{}) {
 func Panic(c echo.Context, data logDump.Fields, message interface{}) {
 	data["caller"] = getCaller()
 
+	if c != nil {
+		data["request_id"] = c.Get("RequestID")
+	}
+
 	logDump.WithFields(data).Panic(message)
 	sentryUmi.SentryLog(c, data, message, sentry.LevelError)
 
@@ -85,6 +105,10 @@ func Panic(c echo.Context, data logDump.Fields, message interface{}) {
 
 func Warning(c echo.Context, data logDump.Fields, message interface{}) {
 	data["caller"] = getCaller()
+
+	if c != nil {
+		data["request_id"] = c.Get("RequestID")
+	}
 
 	logDump.WithFields(data).Warning(message)
 	sentryUmi.SentryLog(c, data, message, sentry.LevelWarning)

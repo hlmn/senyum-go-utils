@@ -149,6 +149,7 @@ func (api *BRIAPI) signHmacBase64(payload string) (*string, error) {
 }
 
 func (api *BRIAPI) GenerateSignature(requestBody string, token string, path string, verb string) (headers map[string]string) {
+	headers = make(map[string]string)
 	dateTime := time.Now().UTC().Format("2006-01-02T15:04:05.515Z")
 
 	payload := fmt.Sprintf("path=%v&verb=%v&token=Bearer %v&timestamp=%v&body=%v",

@@ -23,6 +23,7 @@ type File struct {
 	Name      string
 	Extension string
 	Mime      string
+	Base64    string
 }
 
 func NewFileFromBase64(fileName, base64Content string) (file *File, err error) {
@@ -50,6 +51,7 @@ func NewFileFromBase64(fileName, base64Content string) (file *File, err error) {
 	file.Extension = mime.Extension()
 	file.Name = fmt.Sprintf("%s%s", fileName, mime.Extension())
 	file.Mime = mime.String()
+	file.Base64 = base64Content
 
 	return file, err
 }

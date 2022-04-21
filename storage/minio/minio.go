@@ -1,13 +1,18 @@
 package minio
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"strings"
 
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/hlmn/senyum-go-utils/helper"
 	minio "github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -155,27 +160,39 @@ func (m Minio) UploadMultiPartFile(fileName, bucket string, fileContent *multipa
 	return info.Key, err
 }
 
-func (config Config) GetFile(url string, bucket string, fileName string) (*http.Response, error) {
-	client := &http.Client{}
+func (m Minio) GetFile(bucket, path string) (file *helper.File, err error) {
+	minioClient := m.client
 
-	// if config.UseProxyPublic {
-	// 	proxyUrl, err := url.Parse(config.UrlProxyPublic)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	client = &http.Client{
-	// 		Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)},
-	// 	}
-	// }
-
-	urls := url + "/" + bucket + "/" + fileName
-
-	req, err := http.NewRequestWithContext(context.Background(), "GET", urls, nil)
+	reader, err := minioClient.GetObject(context.Background(), bucket, path, minio.GetObjectOptions{})
 	if err != nil {
-		return nil, err
+		return file, err
 	}
 
-	resultHttp, err := client.Do(req)
+	w := &bytes.Buffer{}
+	if _, err := io.Copy(w, reader); err != nil {
+		return file, err
+	}
 
-	return resultHttp, err
+	base64 := base64.StdEncoding.EncodeToString(w.Bytes())
+	mime, err := mimetype.DetectReader(reader)
+
+	if err != nil {
+		return file, err
+	}
+
+	reader.Seek(0, 0)
+
+	filename := strings.Split(path, "/")
+
+	readerBytes := bytes.NewReader(w.Bytes())
+
+	file = &helper.File{
+		Base64:    base64,
+		Extension: mime.Extension(),
+		Name:      filename[len(filename)-1],
+		Mime:      mime.String(),
+		Reader:    readerBytes,
+	}
+
+	return file, err
 }
