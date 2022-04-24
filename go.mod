@@ -13,5 +13,6 @@ require (
 	github.com/lestrrat-go/strftime v1.0.5 // indirect
 	github.com/minio/minio-go/v7 v7.0.22
 	github.com/sirupsen/logrus v1.8.1
+	github.com/spf13/cast v1.3.0
 	github.com/thedevsaddam/govalidator v1.9.10
 )
