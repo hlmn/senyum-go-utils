@@ -174,11 +174,11 @@ func (m Minio) GetFile(bucket, path string) (file *helper.File, err error) {
 	}
 
 	base64 := base64.StdEncoding.EncodeToString(w.Bytes())
-	mime, err := mimetype.DetectReader(reader)
+	mime := mimetype.Detect(w.Bytes())
 
-	if err != nil {
-		return file, err
-	}
+	// if err != nil {
+	// 	return file, err
+	// }
 
 	reader.Seek(0, 0)
 
