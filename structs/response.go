@@ -1,5 +1,7 @@
 package structs
 
+import "io"
+
 type (
 	Paginator struct {
 		Data            interface{} `json:"data"`
@@ -27,5 +29,11 @@ type (
 		StatusCode int
 		Headers    map[string][]string
 		Error      error
+	}
+
+	HTTPFileReader struct {
+		Param    string
+		FileName string
+		Reader   io.Reader
 	}
 )
