@@ -9,6 +9,7 @@ type (
 		Draw                  string `json:"draw" query:"draw"`
 		Search                string `json:"search" query:"search"`
 		DisableCalculateTotal string `json:"disableCalculateTotal" query:"disableCalculateTotal"`
+		Offset                string `json:"offset" query:"offset"`
 	}
 
 	RequestV2 struct {
