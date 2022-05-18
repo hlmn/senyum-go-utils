@@ -44,6 +44,10 @@ func getCaller() string {
 	return fmt.Sprintf("%s:%d", file, line)
 }
 func Info(c echo.Context, data logDump.Fields, message interface{}) {
+	if data == nil {
+		data = make(logDump.Fields)
+	}
+
 	data["caller"] = getCaller()
 
 	if c != nil {
@@ -56,6 +60,9 @@ func Info(c echo.Context, data logDump.Fields, message interface{}) {
 }
 
 func Error(c echo.Context, data logDump.Fields, message interface{}) {
+	if data == nil {
+		data = make(logDump.Fields)
+	}
 	data["caller"] = getCaller()
 
 	if c != nil {
@@ -68,6 +75,9 @@ func Error(c echo.Context, data logDump.Fields, message interface{}) {
 }
 
 func Fatal(c echo.Context, data logDump.Fields, message interface{}) {
+	if data == nil {
+		data = make(logDump.Fields)
+	}
 	data["caller"] = getCaller()
 
 	if c != nil {
@@ -80,6 +90,9 @@ func Fatal(c echo.Context, data logDump.Fields, message interface{}) {
 }
 
 func Debug(c echo.Context, data logDump.Fields, message interface{}) {
+	if data == nil {
+		data = make(logDump.Fields)
+	}
 	data["caller"] = getCaller()
 
 	if c != nil {
@@ -92,6 +105,9 @@ func Debug(c echo.Context, data logDump.Fields, message interface{}) {
 }
 
 func Panic(c echo.Context, data logDump.Fields, message interface{}) {
+	if data == nil {
+		data = make(logDump.Fields)
+	}
 	data["caller"] = getCaller()
 
 	if c != nil {
@@ -104,6 +120,9 @@ func Panic(c echo.Context, data logDump.Fields, message interface{}) {
 }
 
 func Warning(c echo.Context, data logDump.Fields, message interface{}) {
+	if data == nil {
+		data = make(logDump.Fields)
+	}
 	data["caller"] = getCaller()
 
 	if c != nil {

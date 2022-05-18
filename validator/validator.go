@@ -20,7 +20,7 @@ func InitValidator() {
 			return nil
 		}
 
-		match, _ := regexp.MatchString(`^[^'"\[\]<>\{\}]+$`, val)
+		match, _ := regexp.MatchString(`^[^'"\[\]<>\{\};]+$`, val)
 		if !match {
 			return errors.New("The " + field + " contains unsafe characters")
 		}
