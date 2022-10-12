@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/thedevsaddam/govalidator"
@@ -51,6 +52,24 @@ func InitValidator() {
 		_, err := base64.StdEncoding.DecodeString(val)
 		if err != nil {
 			return errors.New("The " + field + " is not base64 format")
+		}
+
+		return nil
+	})
+
+	govalidator.AddCustomRule("reject_whitespace", func(field string, rule string, message string, value interface{}) error {
+		val, ok := value.(string)
+		if !ok {
+			return errors.New("The " + field + "  is only filled by space")
+		}
+
+		if val == "" {
+			return nil
+		}
+		newValue := strings.ReplaceAll(val, " ", "")
+
+		if newValue == "" {
+			return errors.New("The " + field + " is only filled by space")
 		}
 
 		return nil
