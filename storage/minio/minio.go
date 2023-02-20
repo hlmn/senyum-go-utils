@@ -126,7 +126,7 @@ func (m Minio) Upload(path, bucket string, file *helper.File) (key string, err e
 	return info.Key, err
 }
 
-func (m Minio) UploadMultiPartFile(fileName, bucket string, fileContent *multipart.FileHeader) (string, error) {
+func (m Minio) UploadMultiPartFile(path, bucket string, fileContent *multipart.FileHeader) (string, error) {
 
 	// Get Buffer from file
 	buffer, err := fileContent.Open()
@@ -155,7 +155,8 @@ func (m Minio) UploadMultiPartFile(fileName, bucket string, fileContent *multipa
 	// cacheControl := "max-age=31536000"
 	// userMetaData := map[string]string{"x-amz-acl": "public-read"}
 
-	info, err := minioClient.PutObject(ctx, bucket, objectName, fileBuffer, fileSize, minio.PutObjectOptions{})
+	filePath := fmt.Sprintf("%s/%s", path, objectName)
+	info, err := minioClient.PutObject(ctx, bucket, filePath, fileBuffer, fileSize, minio.PutObjectOptions{})
 
 	return info.Key, err
 }
