@@ -126,4 +126,22 @@ func InitValidator() {
 		return nil
 
 	})
+
+      govalidator.AddCustomRule("blacklist_special_char", func(field string, rule string, message string, value interface{}) error {
+		val, ok := value.(string)
+		if !ok {
+			return errors.New("The " + field + " is not a string")
+		}
+
+		if val == "" {
+			return nil
+		}
+
+		match, _ := regexp.MatchString(`[*&;%${}\\[\\]]`, val)
+		if !match {
+			return errors.New("The " + field + " contains unsafe characters")
+		}
+
+		return nil
+	})
 }
