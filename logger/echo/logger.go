@@ -1,8 +1,10 @@
 package echo
 
 import (
+	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -37,33 +39,80 @@ func InitBodyDumpLog() error {
 
 	return nil
 }
-
+func getCaller() string {
+	_, file, line, _ := runtime.Caller(2)
+	return fmt.Sprintf("%s:%d", file, line)
+}
 func Info(c echo.Context, data logDump.Fields, message interface{}) {
-	logDump.WithFields(data).Info(message)
+	if data == nil {
+		data = make(logDump.Fields)
+	}
 
+	data["caller"] = getCaller()
+
+	if c != nil {
+		data["request_id"] = c.Get("RequestID")
+	}
+
+	logDump.WithFields(data).Info(message)
 	sentryUmi.SentryLog(c, data, message, sentry.LevelInfo)
 
 }
 
 func Error(c echo.Context, data logDump.Fields, message interface{}) {
+	if data == nil {
+		data = make(logDump.Fields)
+	}
+	data["caller"] = getCaller()
+
+	if c != nil {
+		data["request_id"] = c.Get("RequestID")
+	}
+
 	logDump.WithFields(data).Error(message)
 	sentryUmi.SentryLog(c, data, message, sentry.LevelError)
 
 }
 
 func Fatal(c echo.Context, data logDump.Fields, message interface{}) {
+	if data == nil {
+		data = make(logDump.Fields)
+	}
+	data["caller"] = getCaller()
+
+	if c != nil {
+		data["request_id"] = c.Get("RequestID")
+	}
+
 	logDump.WithFields(data).Fatal(message)
 	sentryUmi.SentryLog(c, data, message, sentry.LevelFatal)
 
 }
 
 func Debug(c echo.Context, data logDump.Fields, message interface{}) {
+	if data == nil {
+		data = make(logDump.Fields)
+	}
+	data["caller"] = getCaller()
+
+	if c != nil {
+		data["request_id"] = c.Get("RequestID")
+	}
+
 	logDump.WithFields(data).Debug(message)
 	sentryUmi.SentryLog(c, data, message, sentry.LevelDebug)
 
 }
 
 func Panic(c echo.Context, data logDump.Fields, message interface{}) {
+	if data == nil {
+		data = make(logDump.Fields)
+	}
+	data["caller"] = getCaller()
+
+	if c != nil {
+		data["request_id"] = c.Get("RequestID")
+	}
 
 	logDump.WithFields(data).Panic(message)
 	sentryUmi.SentryLog(c, data, message, sentry.LevelError)
@@ -71,6 +120,14 @@ func Panic(c echo.Context, data logDump.Fields, message interface{}) {
 }
 
 func Warning(c echo.Context, data logDump.Fields, message interface{}) {
+	if data == nil {
+		data = make(logDump.Fields)
+	}
+	data["caller"] = getCaller()
+
+	if c != nil {
+		data["request_id"] = c.Get("RequestID")
+	}
 
 	logDump.WithFields(data).Warning(message)
 	sentryUmi.SentryLog(c, data, message, sentry.LevelWarning)
