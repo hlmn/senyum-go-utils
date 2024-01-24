@@ -197,3 +197,15 @@ func (m Minio) GetFile(bucket, path string) (file *helper.File, err error) {
 
 	return file, err
 }
+
+
+func (m Minio) DeleteFile(bucket, path string) (err error) {
+	minioClient := m.client
+
+	err = minioClient.RemoveObject(context.Background(), bucket, path, minio.RemoveObjectOptions{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
